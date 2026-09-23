@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: smartbar-db
+    environment:
+      POSTGRES_DB: smartbar_db
+      POSTGRES_USER: smartbar_user
+      POSTGRES_PASSSWORD: local_secret_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:
