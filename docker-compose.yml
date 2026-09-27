@@ -5,7 +5,7 @@ services:
     environment:
       POSTGRES_DB: smartbar_db
       POSTGRES_USER: smartbar_user
-      POSTGRES_PASSSWORD: local_secret_password
+      POSTGRES_PASSWORD: local_secret_password
     ports:
       - "5432:5432"
     volumes:
