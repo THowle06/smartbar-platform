@@ -12,6 +12,7 @@ import {
   Lock,
   Unlock,
 } from "lucide-react";
+import { LoanModals } from "@/components/loans/LoanModals";
 
 interface Appointment {
   id: string;
@@ -35,6 +36,8 @@ export default function DeskPage() {
   const [loading, setLoading] = useState(false);
   const [selectedAppointment, setSelectedAppointment] =
     useState<Appointment | null>(null);
+  const [checkoutLoanId, setCheckoutLoanId] = useState<string | null>(null);
+  const [returnLoanId, setReturnLoanId] = useState<string | null>(null);
 
   const token = user?.token;
 
@@ -336,6 +339,18 @@ export default function DeskPage() {
             </div>
 
             <div className="flex justify-end gap-2 pt-2 border-t">
+              {selectedAppointment.type === "LOAN_COLLECTION" && (
+                <button
+                  onClick={() => {
+                    setCheckoutLoanId(selectedAppointment.id);
+                    setSelectedAppointment(null);
+                  }}
+                  className="px-4 py-2 text-xs bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition"
+                >
+                  Book Out Device
+                </button>
+              )}
+
               <button
                 onClick={() => setSelectedAppointment(null)}
                 className="px-4 py-2 text-xs border rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition"
@@ -346,6 +361,15 @@ export default function DeskPage() {
           </div>
         </div>
       )}
+
+      <LoanModals
+        token={token || ""}
+        onSuccess={() => fetchAppointments(selectedDate)}
+        checkoutLoanId={checkoutLoanId}
+        onCloseCheckout={() => setCheckoutLoanId(null)}
+        returnLoanId={returnLoanId}
+        onCloseReturn={() => setReturnLoanId(null)}
+      />
     </div>
   );
 }
