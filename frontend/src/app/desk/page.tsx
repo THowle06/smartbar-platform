@@ -13,6 +13,7 @@ import {
   Unlock,
 } from "lucide-react";
 import { LoanModals } from "@/components/loans/LoanModals";
+import { RepairIntakeModal } from "@/components/repairs/RepairIntakeModal";
 
 interface Appointment {
   id: string;
@@ -38,6 +39,8 @@ export default function DeskPage() {
     useState<Appointment | null>(null);
   const [checkoutLoanId, setCheckoutLoanId] = useState<string | null>(null);
   const [returnLoanId, setReturnLoanId] = useState<string | null>(null);
+  const [intakeAppointment, setIntakeAppointment] =
+    useState<Appointment | null>(null);
 
   const token = user?.token;
 
@@ -146,6 +149,30 @@ export default function DeskPage() {
         return "bg-blue-100 text-blue-800 dark:bg-blue-900/60 dark:text-blue-200";
       default:
         return "bg-slate-100 text-slate-800";
+    }
+  };
+
+  const handleCollectDevice = async (appointmentId: string) => {
+    if (!token) return;
+    try {
+      const res = await fetch(
+        `http://localhost:8080/api/desk/repairs/${appointmentId}/collect`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+      if (!res.ok) {
+        const err = await res.text();
+        alert(err || "Failed to process collection.");
+        return;
+      }
+      setSelectedAppointment(null);
+      fetchAppointments(selectedDate);
+    } catch (err) {
+      console.error("Collection error:", err);
     }
   };
 
@@ -351,6 +378,31 @@ export default function DeskPage() {
                 </button>
               )}
 
+              {selectedAppointment.type === "DROP_REPAIR" &&
+                selectedAppointment.status === "NEW_PENDING" && (
+                  <button
+                    onClick={() => {
+                      setIntakeAppointment(selectedAppointment);
+                      setSelectedAppointment(null);
+                    }}
+                    className="px-4 py-2 text-xs bg-amber-600 hover:bg-amber-700 text-white font-semibold rounded-lg transition"
+                  >
+                    Intake & Print Label
+                  </button>
+                )}
+
+              {selectedAppointment.type === "COLLECT_REPAIR" && (
+                <button
+                  disabled={!selectedAppointment.canCollect}
+                  onClick={() => handleCollectDevice(selectedAppointment.id)}
+                  className={`px-4 py-2 text-xs font-semibold rounded-lg transition text-white ${selectedAppointment.canCollect ? "bg-emerald-600 hover:bg-emerald-700" : "bg-slate-400 cursor-not-allowed"}`}
+                >
+                  {selectedAppointment.canCollect
+                    ? "Complete Handover"
+                    : "Payment Required"}
+                </button>
+              )}
+
               <button
                 onClick={() => setSelectedAppointment(null)}
                 className="px-4 py-2 text-xs border rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition"
@@ -370,6 +422,19 @@ export default function DeskPage() {
         returnLoanId={returnLoanId}
         onCloseReturn={() => setReturnLoanId(null)}
       />
+
+      {intakeAppointment && (
+        <RepairIntakeModal
+          token={token || ""}
+          bookingId={intakeAppointment.bookingId}
+          repairId={intakeAppointment.id}
+          studentName={intakeAppointment.studentName}
+          studentId={intakeAppointment.studentId}
+          deviceSummary={intakeAppointment.deviceSummary}
+          onClose={() => setIntakeAppointment(null)}
+          onSuccess={() => fetchAppointments(selectedDate)}
+        />
+      )}
     </div>
   );
 }
